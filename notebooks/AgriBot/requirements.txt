@@ -1,0 +1,11 @@
+langchain
+langchain-community
+langgraph
+langchain-chroma
+chromadb
+python-dotenv
+tavily-python
+langchain-huggingface
+requests
+langchain_groq
+langchain.text_splitters
