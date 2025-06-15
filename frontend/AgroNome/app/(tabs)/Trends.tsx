@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface CropData {
   name: string;
@@ -20,7 +21,8 @@ interface CropData {
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CHART_WIDTH = SCREEN_WIDTH - 120;
+const CHART_PADDING = 40;
+const CHART_WIDTH = SCREEN_WIDTH - 120 - CHART_PADDING;
 const CHART_HEIGHT = 180;
 
 const Trends: React.FC = () => {
@@ -53,10 +55,13 @@ const Trends: React.FC = () => {
     const maxPrice = Math.max(...priceData);
     const minPrice = Math.min(...priceData);
     const range = maxPrice - minPrice || 1;
+    
+    // Add padding to keep points inside bounds
+    const PADDING = 15;
 
     return priceData.map((price, index) => ({
-      x: (index / (priceData.length - 1)) * CHART_WIDTH,
-      y: ((maxPrice - price) / range) * (CHART_HEIGHT - 40) + 20,
+      x: PADDING + (index / (priceData.length - 1)) * (CHART_WIDTH - 2 * PADDING),
+      y: PADDING + ((maxPrice - price) / range) * (CHART_HEIGHT - 2 * PADDING),
       price,
       index
     }));
@@ -120,7 +125,7 @@ const Trends: React.FC = () => {
                     key={i}
                     style={[
                       styles.gridLine,
-                      { top: 20 + i * ((CHART_HEIGHT - 40) / 4) }
+                      { top: 15 + i * ((CHART_HEIGHT - 30) / 4) }
                     ]}
                   />
                 ))}
@@ -150,8 +155,8 @@ const Trends: React.FC = () => {
                       style={[
                         styles.lineSegment,
                         {
-                          left: point.x,
-                          top: point.y,
+                          left: Math.max(0, Math.min(CHART_WIDTH - length, point.x)),
+                          top: Math.max(0, Math.min(CHART_HEIGHT - 3, point.y)),
                           width: length,
                           transform: [{ rotate: `${angle}deg` }],
                         }
@@ -160,15 +165,15 @@ const Trends: React.FC = () => {
                   );
                 })}
 
-                {/* Data points */}
+                {/* Data points with boundary checks */}
                 {chartPoints.map((point, index) => (
                   <View
                     key={index}
                     style={[
                       styles.dataPoint,
                       {
-                        left: point.x - 6,
-                        top: point.y - 6,
+                        left: Math.max(0, Math.min(CHART_WIDTH - 12, point.x - 6)),
+                        top: Math.max(0, Math.min(CHART_HEIGHT - 12, point.y - 6)),
                       }
                     ]}
                   />
@@ -181,8 +186,8 @@ const Trends: React.FC = () => {
                     style={[
                       styles.touchPoint,
                       {
-                        left: point.x - 15,
-                        top: point.y - 15,
+                        left: Math.max(0, Math.min(CHART_WIDTH - 30, point.x - 15)),
+                        top: Math.max(0, Math.min(CHART_HEIGHT - 30, point.y - 15)),
                       }
                     ]}
                     onPress={() => {
@@ -208,11 +213,11 @@ const Trends: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Market Trends</Text>
             <Text style={styles.headerSubtitle}>Real-time crop pricing</Text>
           </View>
@@ -228,7 +233,9 @@ const Trends: React.FC = () => {
             <View style={styles.cropIconContainer}>
               <Ionicons name="leaf-outline" size={20} color="#10B981" />
             </View>
-            <Text style={styles.cropButtonText}>{selectedCrop}</Text>
+            <Text style={styles.cropButtonText} numberOfLines={1} ellipsizeMode="tail">
+              {selectedCrop}
+            </Text>
             <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
@@ -238,7 +245,9 @@ const Trends: React.FC = () => {
           {/* Price Header */}
           <View style={styles.priceHeader}>
             <View style={styles.priceHeaderRow}>
-              <Text style={styles.cropName}>{cropData.name}</Text>
+              <Text style={styles.cropName} numberOfLines={1} ellipsizeMode="tail">
+                {cropData.name}
+              </Text>
               <View style={[
                 styles.changeBadge,
                 { backgroundColor: cropData.change >= 0 ? '#F0FDF4' : '#FEF2F2' }
@@ -288,7 +297,7 @@ const Trends: React.FC = () => {
         <View style={styles.quickStats}>
           <View style={styles.statCard}>
             <View style={styles.statContent}>
-              <View>
+              <View style={styles.statTextContainer}>
                 <Text style={styles.statLabel}>Weekly High</Text>
                 <Text style={styles.statValue}>₹58</Text>
               </View>
@@ -300,7 +309,7 @@ const Trends: React.FC = () => {
           
           <View style={styles.statCard}>
             <View style={styles.statContent}>
-              <View>
+              <View style={styles.statTextContainer}>
                 <Text style={styles.statLabel}>Weekly Low</Text>
                 <Text style={styles.statValue}>₹38</Text>
               </View>
@@ -367,7 +376,7 @@ const Trends: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -380,12 +389,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
+  },
+  headerContent: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
@@ -429,6 +442,7 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
     flexDirection: 'row',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   cropIconContainer: {
     backgroundColor: '#F0FDF4',
@@ -454,6 +468,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3F4F6',
     marginBottom: 20,
+    overflow: 'hidden',
   },
   priceHeader: {
     marginBottom: 20,
@@ -468,6 +483,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#111827',
+    flex: 1,
+    marginRight: 12,
   },
   changeBadge: {
     paddingHorizontal: 8,
@@ -508,6 +525,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
+    overflow: 'hidden',
   },
   comparisonItem: {
     flex: 1,
@@ -523,11 +541,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
     marginBottom: 4,
+    textAlign: 'center',
   },
   comparisonPrice: {
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
+    textAlign: 'center',
   },
   divider: {
     width: 1,
@@ -536,6 +556,7 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     marginTop: 24,
+    overflow: 'hidden',
   },
   chartHeader: {
     flexDirection: 'row',
@@ -579,6 +600,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 16,
+    overflow: 'hidden',
   },
   chartRow: {
     flexDirection: 'row',
@@ -602,6 +624,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    overflow: 'hidden',
   },
   gridLine: {
     position: 'absolute',
@@ -654,6 +677,7 @@ const styles = StyleSheet.create({
   xAxisLabel: {
     fontSize: 12,
     color: '#9CA3AF',
+    textAlign: 'center',
   },
   quickStats: {
     flexDirection: 'row',
@@ -667,11 +691,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#F3F4F6',
+    overflow: 'hidden',
   },
   statContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  statTextContainer: {
+    flex: 1,
   },
   statLabel: {
     fontSize: 12,
@@ -698,6 +726,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3F4F6',
     marginBottom: 20,
+    overflow: 'hidden',
   },
   insightsTitle: {
     fontSize: 18,
@@ -720,17 +749,20 @@ const styles = StyleSheet.create({
   },
   insightContent: {
     flex: 1,
+    flexShrink: 1,
   },
   insightTitle: {
     fontSize: 14,
     fontWeight: '500',
     color: '#111827',
+    flexWrap: 'wrap',
   },
   insightDescription: {
     fontSize: 12,
     color: '#6B7280',
     marginTop: 4,
     lineHeight: 16,
+    flexWrap: 'wrap',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -743,15 +775,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   primaryButtonText: {
     color: 'white',
     fontWeight: '600',
+    textAlign: 'center',
   },
   primaryButtonSubtext: {
     color: '#A7F3D0',
     fontSize: 12,
     marginTop: 4,
+    textAlign: 'center',
   },
   secondaryButton: {
     flex: 1,
@@ -761,15 +796,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   secondaryButtonText: {
     color: '#111827',
     fontWeight: '600',
+    textAlign: 'center',
   },
   secondaryButtonSubtext: {
     color: '#6B7280',
     fontSize: 12,
     marginTop: 4,
+    textAlign: 'center',
   },
 });
 
