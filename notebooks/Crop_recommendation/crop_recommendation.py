@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
 
-crop_reco_df=pd.read_csv('/Users/lohitalakshmi/Documents/GitHub/AgroNome/models/Crop_recommendation/crop_recommendation_dataset.csv')
+crop_reco_df=pd.read_csv('/Users/lohitalakshmi/Documents/GitHub/AgroNome/notebooks/Crop_recommendation/crop_recommendation_dataset.csv')
 
 
 crop_reco_df['Soil']=LabelEncoder().fit_transform(crop_reco_df['Soil'])
